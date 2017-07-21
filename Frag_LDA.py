@@ -17,6 +17,20 @@ import math
 import scipy as sc
 
  
+def save_matrix2subdue(matrix,labels,fname):
+    
+    components=get_connected_components(matrix,labels)
+    fobj=open(fname,'w')
+    for c in components:
+        component_matrix,component_labels=extract_matrix(matrix,labels,c)
+        fobj.write('%Processing:'+'\n')
+        for ind,v in enumerate(component_labels):
+            fobj.write('v '+str(ind)+' http://vocab.linkeddata.es/resource/'+v+'\n')
+        for i in range(len(component_matrix)):
+            for j in range(len(component_matrix)):
+                if component_matrix[i][j]==0:continue
+                fobj.write('d '+str(i)+' '+str(j)+' informBy'+'\n')
+
 
 def matrix_to_edges(matrix,labels):
     edges=[]
@@ -409,12 +423,14 @@ index_label_dict=get_index_label_dict(set(labels))
 int_labels=[index_label_dict[la] for la in labels]
 d_m=get_distance_mat(g,labels)
 
-A,motif_assign_vec,ecount_matrix=motif_lda(int_labels,d_m,len(set(labels)),len(labels),motif_num,100,verbose=True)
+A,motif_assign_vec,ecount_matrix=motif_lda(int_labels,d_m,len(set(labels)),len(labels),motif_num,1,verbose=True)
 
+save_matrix2subdue(matrix,labels,output_dir+pickle_name+'.g')
 plot_dir(matrix,labels,doc_labels,motif_assign_vec=motif_assign_vec,dirname=output_dir+'/summary/')
 
 
 filp_noise_node(matrix,motif_assign_vec)
 matrix,labels,motif_assign_vec,connected_components,frag_workflow=postprocess(matrix,labels,doc_labels,motif_assign_vec)
 plot_dir(matrix,labels,[],motif_assign_vec=motif_assign_vec,components=connected_components,dirname=output_dir+'/fragments/')
+
 
