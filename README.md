@@ -1,4 +1,4 @@
-# LDA_fragment_miner
+# FSM-Flow
 
 bash ./run.sh  
 
