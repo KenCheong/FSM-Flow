@@ -1,7 +1,7 @@
 from toy_graph_generater import *
 from utility import *
-from FSG_Flow_DE import *
-from FSG_Flow_GC import *
+from PSM_Flow_DE import *
+from PSM_Flow_GC import *
 from postprocess import *
 
 topic_num=3
