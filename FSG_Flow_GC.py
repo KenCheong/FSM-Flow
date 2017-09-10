@@ -129,7 +129,6 @@ def GC_LDA(labels,point_vec,components,topic_num,iter_num,component_cluster_num=
     s=0
     ######
     for i in range(iter_num): 
-        converge=True
         scan_order=range(node_num)
         shuffle(scan_order)
         new_frag_group=[]
