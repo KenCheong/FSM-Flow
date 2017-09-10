@@ -76,7 +76,6 @@ def DE_gibb_sampling(labels,distance_matrix,topic_num,iter_num,distance_threshol
     ###
     for i in range(iter_num): 
         print 'iter num:'+str(i)
-        converge=True
         scan_order=range(node_num)
         shuffle(scan_order)
                
@@ -92,7 +91,6 @@ def DE_gibb_sampling(labels,distance_matrix,topic_num,iter_num,distance_threshol
             topic_assign_vec[node]=picked_topic
             ecount_matrix[labels[node]][picked_topic]+=1
             topic_count[picked_topic]+=1
-            if old_topic!=picked_topic:converge=False
         if verbose==True:
 #            print ecount_matrix
             print 'perplexity:',DE_perplexity(distance_matrix,ecount_matrix,topic_count,node_group,labels,topic_assign_vec,topic_num,alpha,beta)
