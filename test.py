@@ -1,26 +1,70 @@
-from toy_graph_generater import *
-from utility import *
-from PSM_Flow_DE import *
-from PSM_Flow_GC import *
-from postprocess import *
+import os
+import matplotlib.pyplot as plt
 
-topic_num=3
-matrix,labels,subgraphs_matrices,subgraphs_labels=get_toy_graph(repeat_times=10)
-g,lp=matrix_to_graph(matrix,labels)
-int_labels=get_int_labels(labels)##map node labels of nodes to integer 
+import pandas as pd
+import json
+import time
+from  sythetic_data_generator import *
+from PSM_Flow import *
+def load_result(fname):
+    with open (fname, 'rb') as fp:
+        matrix,labels,motif_assign_vec = json.load(fp)
+    return matrix,labels,motif_assign_vec
 
-###Distance encoded Gibb sampling
-d_m=get_distance_mat(g,labels)
-topic_assign_vec=DE_gibb_sampling(int_labels,d_m,topic_num,100,verbose=True)
-###Gaussian cluster LDA
+def matrix_to_matrices(matrix,labels):
+    components=get_connected_components(matrix,labels)
+    doc_labels=[0]*len(labels)
+
+    for c in range(len(components)):
+        for i in range(len(components[c])):
+#            print len(doc_labels),components[c][i]
+            doc_labels[components[c][i]]=c
+
+    doc_num=len(set(doc_labels))
+    #doc_num=len(components)
+    doc_components=[]
+    matrices=[]
+    label_list=[]
+    for i in range(doc_num):doc_components.append([])
+    for i in range(len(doc_labels)):doc_components[doc_labels[i]].append(i)
+    for i in range(doc_num):
+        component_matrix,component_labels=extract_matrix(matrix,labels,doc_components[i])
+        matrices.append(component_matrix)
+        label_list.append(component_labels)
+    return matrices,label_list
+
+
+f_psm=open('psm_stat.csv','a')
+for i in range(10,80,10):
+    matrix,labels,subgraphs_matrices,subgraphs_labels,ref_matrix,ref_labels= generate_sythetic_data(20,workflow_num=i,frag_size=15)
+    matrices,label_list=matrix_to_matrices(matrix,labels)
+    f_psm=open('psm_stat.csv','a')
+    g,lp=matrix_to_graph(matrix,labels)
+    int_labels,ind_label,index_label_dict=get_int_labels(labels)##map node labels of nodes to integer 
+    dis_matrices,components=get_distance_matrices(matrix,labels)
+    start = time.time()
+    topic_assign_vec,pos_vectors,frag_means,frag_group,frag_topic,transition_matrices,perplexity_list=PSM_Flow(matrix,int_labels,dis_matrices,components,1,1,beta=0.5,dimensionlen=5,ind_label=ind_label,tau=2)
+    end = time.time()
+    elapsed = end - start
+    print 'psm',elapsed
+    f_psm.write('{0},{1}\n'.format(i,elapsed))
+    f_psm.close()
+
+
+##plot runtime
 '''
-node_vectors,components=get_node_vectors(matrix,labels)
-topic_assign_vec=GC_LDA(int_labels,node_vectors,components,topic_num,50)
+df = pd.read_csv('psm_stat2.csv')  
+print df.iloc[:,0].tolist()
+print df.iloc[:,1].tolist()
+x=df.iloc[:,0].tolist()
+y=df.iloc[:,1].tolist()
+
+
+plt.xlabel('Number of Transactions ')
+plt.ylabel('Runtime(sec)')
+plt.plot(x,y,marker='o')
+
+plt.show()
+
+
 '''
-
-###output visualization
-plot_graph(matrix,labels,topic_assign_vec,fname='toy_graph')
-frag_matrix,frag_labels,topic_assign_vec=extract_fragments(matrix,labels,topic_assign_vec)#get fragments
-plot_graph(frag_matrix,frag_labels,topic_assign_vec,fname='fragments')
-
-
